@@ -257,10 +257,6 @@ class Tetris{
         }
         // checks if tetrim collides with any blocks on the board vertically. 
         bool collisionVert(pair<vector<vector<char>>, vector<int>>& tetrim, int x, int y){
-            // To-do: implement checking if tetrim has collision vertically with
-            // tetrim center at x, y
-            // center on board is x-1,y-1;
-            //
             int m = tetrim.first.size();
             int n = tetrim.first[0].size(); 
 
@@ -286,11 +282,13 @@ class Tetris{
                     while(tetrim.first[i][j]==' '){
                         i--;
                     }
-                    if(board[cornerY+i+1][j]!=' ')return true;
+                    if(board[cornerY+i+1][cornerX+j]!=' ')return true;
                 }
             }
             return false; 
         }
+        // To-do: add horizontal collision detection 
+        //
         // adds tetrimino to board with centered at x, y on the board
         void addTetrimToBoard(pair<vector<vector<char>>, vector<int>>& tetrim,int x,int y){
 
@@ -375,6 +373,7 @@ int main(){
             // perform only one action per frame  
             int key = wgetch(gameWin);
             pair<vector<vector<char>>, vector<int>> next = tet; 
+            // To-do: add ability to move tetrim left and right  
             if(key==KEY_UP){
                 tetris.rotateTetrim(next);
                 //tetris.rotateTetrim(tet);
