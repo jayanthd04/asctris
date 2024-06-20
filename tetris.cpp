@@ -342,6 +342,11 @@ class Tetris{
             }
             return false; 
         }
+        bool collision(pair<vector<vector<char>>, vector<int>>& tetrim, int x, int y){
+            return collisionVert(tetrim,x,y)||
+                collisionLeft(tetrim,x,y)||
+                collisionRight(tetrim,x,y);
+        }
         // adds tetrimino to board with centered at x, y on the board
         void addTetrimToBoard(pair<vector<vector<char>>, vector<int>>& tetrim,int x,int y){
 
@@ -404,7 +409,11 @@ int main(){
     pair<vector<vector<char>>, vector<int>> tet = tetris.getRandomTetrim();
     // need to make game more responsive 
     while(i<10){
-        int key = wgetch(gameWin);
+        //int key = wgetch(gameWin);
+        // alt path to take multiple actions 
+        int key; 
+        while((key=wgetch(gameWin))!=ERR)
+            acts.push(key);
         // alt path where we perform action first if possible 
         /*if(key==KEY_UP){
             // need to check if rotation collides horizontally as well 
@@ -420,18 +429,21 @@ int main(){
             y=1;
             // update gameOver bool 
             // clear lines
+            acts = queue<int>();
             tet = tetris.getRandomTetrim(); 
         }
         // performing action just before rendering 
         else{
             // perform only one action per frame  
             //int key = wgetch(gameWin);
+            int step = 0;
+            while(!acts.empty()){
+                int key = acts.front();
+                acts.pop();
             if(key==KEY_UP){
                 pair<vector<vector<char>>, vector<int>> next = tet; 
                 tetris.rotateTetrim(next);
-                if(!tetris.collisionVert(next,x,y+next.second[0])&&
-                        !tetris.collisionLeft(next,x,y+next.second[0])&&
-                        !tetris.collisionRight(next,x,y+next.second[0]))
+                if(!tetris.collision(next,x,y+next.second[0]))
                     tet = next; 
                 //tetris.rotateTetrim(tet);
             }
@@ -442,6 +454,7 @@ int main(){
             if(key==KEY_RIGHT){
                 if(!tetris.collisionRight(tet,x,y+tet.second[0]))
                     x++; 
+            }
             }
         }
         tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
