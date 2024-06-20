@@ -288,7 +288,60 @@ class Tetris{
             return false; 
         }
         // To-do: add horizontal collision detection 
-        //
+        bool collisionLeft(pair<vector<vector<char>>, vector<int>>& tetrim, int x, int y){
+            int m = tetrim.first.size(); 
+            int n = tetrim.first[0].size(); 
+
+            int cornerX = x-tetrim.second[1]-1; 
+            int cornerY = y-tetrim.second[0]-1; 
+
+            // iterate through each cell in the first col 
+            // if cell is not blank, check if block to the left of curr 
+            // on board is filled or if the x coord of the 
+            // cell is equal to 0, if so return true  
+            // if cell is blank, go a cell to the right till we reach 
+            // a non-empty cell and check if the block to the left 
+            // is filled if so return true; 
+
+            for(int i=0;i<m;i++){
+                if(tetrim.first[i][0]!=' '){
+                    // should be placed at board[cornerY+i][cornerX]
+                    if(cornerX == 0 || board[cornerY+i][cornerX-1]!=' ')
+                        return true; 
+                }
+                else{
+                    int j = 0;
+                    while(tetrim.first[i][j]==' '){
+                        j++; 
+                    }
+                    if(board[cornerY+i][cornerX+j-1]!=' ')return true; 
+                }
+            }
+            return false; 
+        }
+        bool collisionRight(pair<vector<vector<char>>, vector<int>>& tetrim, int x, int y){
+            int m = tetrim.first.size(); 
+            int n = tetrim.first[0].size(); 
+
+            int cornerX = x - tetrim.second[1] - 1;
+            int cornerY = y - tetrim.second[0] -1; 
+
+            for(int i=0;i<m;i++){
+                if(tetrim.first[i][n-1]!=' '){
+                    // should be placed at board[cornerY+i][cornerX+n-1];
+                    if(cornerX+n-1 == board[0].size()-1 || board[cornerY+i][cornerX+n]!=' ')
+                        return true; 
+                }
+                else{
+                    int j =0;
+                    while(tetrim.first[i][j]==' '){
+                        j--; 
+                    }
+                    if(board[cornerY+i][cornerX+j+1]!=' ')return true; 
+                }
+            }
+            return false; 
+        }
         // adds tetrimino to board with centered at x, y on the board
         void addTetrimToBoard(pair<vector<vector<char>>, vector<int>>& tetrim,int x,int y){
 
@@ -349,7 +402,8 @@ int main(){
     int x=5; 
     int y=1; 
     pair<vector<vector<char>>, vector<int>> tet = tetris.getRandomTetrim();
-    while(i<5){
+    // need to make game more responsive 
+    while(i<10){
         int key = wgetch(gameWin);
         // alt path where we perform action first if possible 
         /*if(key==KEY_UP){
@@ -372,16 +426,23 @@ int main(){
         else{
             // perform only one action per frame  
             //int key = wgetch(gameWin);
-            pair<vector<vector<char>>, vector<int>> next = tet; 
-            // To-do: add ability to move tetrim left and right  
             if(key==KEY_UP){
+                pair<vector<vector<char>>, vector<int>> next = tet; 
                 tetris.rotateTetrim(next);
+                if(!tetris.collisionVert(next,x,y+next.second[0])&&
+                        !tetris.collisionLeft(next,x,y+next.second[0])&&
+                        !tetris.collisionRight(next,x,y+next.second[0]))
+                    tet = next; 
                 //tetris.rotateTetrim(tet);
             }
-
-            // update tet to next if no collision occurs 
-            if(!tetris.collisionVert(next,x,y+next.second[0]))
-                tet = next;
+            if(key==KEY_LEFT){
+                if(!tetris.collisionLeft(tet,x,y+tet.second[0]))
+                    x--;
+            }
+            if(key==KEY_RIGHT){
+                if(!tetris.collisionRight(tet,x,y+tet.second[0]))
+                    x++; 
+            }
         }
         tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
         Sleep(900);
