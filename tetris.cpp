@@ -350,7 +350,7 @@ int main(){
     int y=1; 
     pair<vector<vector<char>>, vector<int>> tet = tetris.getRandomTetrim();
     while(i<5){
-        //int key = wgetch(gameWin);
+        int key = wgetch(gameWin);
         // alt path where we perform action first if possible 
         /*if(key==KEY_UP){
             // need to check if rotation collides horizontally as well 
@@ -371,7 +371,7 @@ int main(){
         // performing action just before rendering 
         else{
             // perform only one action per frame  
-            int key = wgetch(gameWin);
+            //int key = wgetch(gameWin);
             pair<vector<vector<char>>, vector<int>> next = tet; 
             // To-do: add ability to move tetrim left and right  
             if(key==KEY_UP){
