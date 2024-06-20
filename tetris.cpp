@@ -447,7 +447,7 @@ int main(){
         tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
         Sleep(900);
         tetris.clearTetrimFromCenter(gameWin,tet,x,y+tet.second[0]); 
-        y++; 
+        y++;
     }
     /*while(i<5){
         x=5;
