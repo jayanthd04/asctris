@@ -24,9 +24,8 @@ class Tetris{
     // if row is cleared, 
     private: 
         vector<vector<char>> board{16,vector<char>(10,' ')};
-        // maintain centers for each tetrim
-        // everytime tetrim is rotated, shift center
-        // center y ,x 
+        // resize board to take into account the vanish zone 
+        //vector<vector<char>> board{32,vector<char>(10,' ')};
         vector<pair<vector<vector<char>>,vector<int>>> tetrim = {
             {
                 {
@@ -86,20 +85,12 @@ class Tetris{
         void printTetrim(vector<vector<char>>& tet){
             string ret = "";
             for(int i=0;i<tet.size();i++){
-                /*for(int k =0;k<tetrim[i][j].size();k++){
-                    ret+=tetrim[i][j][k];
-                }*/
                 string t = string(begin(tet[i]),end(tet[i]));
-                //cout<<t<<endl;
-                //printw(&tet[i][0]);
                 printw(t.c_str());
                 if(i!=tet.size()-1){
-                    //ret+="\n";
                     printw("\n");
-                    //cout<<endl;
                 }
             }
-            //printw(ret);
         }
         void printTetrims(){
             int i = -1; 
@@ -118,12 +109,6 @@ class Tetris{
                 printTetrim(tetrim[i].first);
                 refresh();
             }
-            /*for(int i=0;i<tetrim.size();i++){
-                printTetrim(i);
-                refresh();
-                getch();
-                clear();
-            }*/
         }
         void rotateTetrim(pair<vector<vector<char>>, vector<int>>& orig){
             // update shift center of tetrim when rotating 
@@ -158,13 +143,10 @@ class Tetris{
                 }
                 else if (ch == KEY_UP){
                     rotateTetrim(tet);
-                    //tet = rot;
                 }
                 erase();
                 refresh();
                 printTetrim(tet.first);
-                //printw("\n");
-                //printw(&to_string(i)[0]);
                 string cent = to_string(tet.second[0]) +","+to_string(tet.second[1]);
                 printw("\n");
                 printw(cent.c_str());
@@ -175,17 +157,12 @@ class Tetris{
         pair<vector<vector<char>>, vector<int>> getRandomTetrim(){
             srand(static_cast<unsigned int>(time(0)));
             int i = rand() % 7;
-            //cout<< i<<endl;
             return tetrim[i];
         }
         // renders game board onto Window gameWin
         void renderBoard(WINDOW*& gameWin){
             int height; 
             int width; 
-            // testing rendering board; 
-            /*for(int i=0;i<10;i++){
-                board[15][i]='-';
-            }*/
             getmaxyx(gameWin,width,height);
             for(int i=0;i<board.size();i++){
                 string r = string(begin(board[i]),end(board[i]));
@@ -198,10 +175,8 @@ class Tetris{
         // renders tetrimino with center at x, y onto Window gameWin based on the current board 
         void renderTetrimFromCenter(WINDOW*& gameWin, pair <vector<vector<char>>,vector<int>>& tetrim, int x, int y){
             renderBoard(gameWin);
-            int m = tetrim.first.size(); 
-            //int n = tetrim[0].size(); 
+            int m = tetrim.first.size();  
             int n = tetrim.first[0].size();
-            // shift y by m/2 if y is equal to 1
 
             // start rendering tetrim starting from the left corner which 
             // is center x, y - center of tetrim 
@@ -213,10 +188,6 @@ class Tetris{
                 mvwprintw(gameWin,cornerY+i,cornerX,t.c_str());
             }
             wrefresh(gameWin);
-            /*int leftCorner =  
-            for(int i=0;i<m;i++){
-
-            }*/
 
         }
         //clear tetrimino with center at x, y on Window gameWin 
@@ -408,6 +379,20 @@ class Tetris{
                 }
             }
         }
+        bool gameOver(pair<vector<vector<char>>, vector<int>>& tetrim){
+            int m = tetrim.first.size(); 
+            int n = tetrim.first[0].size(); 
+
+            int cornerX = 4-tetrim.second[1];
+            int cornerY = tetrim.second[0];
+
+            for(int i=0;i<m;i++){
+                for(int j=0; j<n;j++){
+                    if(board[cornerY+i][cornerX+j]!=' ')return true; 
+                }
+            }
+            return false; 
+        }
 
 };
 int main(){
@@ -446,8 +431,9 @@ int main(){
     int x=5; 
     int y=1; 
     pair<vector<vector<char>>, vector<int>> tet = tetris.getRandomTetrim();
+    gameOver = tetris.gameOver(tet);
     // need to make game more responsive 
-    while(i<20){
+    while(/*i<20*/!gameOver){
         //int key = wgetch(gameWin);
         // alt path to take multiple actions 
         int key; 
@@ -468,9 +454,9 @@ int main(){
             x=5;
             y=1;
             // update gameOver bool 
-            // clear lines
             acts = queue<int>();
             tet = tetris.getRandomTetrim(); 
+            gameOver = tetris.gameOver(tet);
         }
         // performing action just before rendering 
         else{
