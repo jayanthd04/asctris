@@ -368,6 +368,46 @@ class Tetris{
                 }
             }
         }
+        bool canClearRow(int row){
+            for(int j=0;j<board[0].size();j++){
+                if(board[row][j]== ' ')return false; 
+            }
+            return true; 
+        }
+        void shiftRowsAboveOne(int row){
+            int i=row; 
+            while(i>0){
+                board[i]=board[i-1];
+                i--;
+            }
+            board[0] = vector<char>(10,' ');
+        }
+        // clears lines after placing tetrim at center x, y 
+        void clearLines(pair<vector<vector<char>>, vector<int>>& tetrim, int x, int y){
+            int m = tetrim.first.size(); 
+            int n = tetrim.first[0].size(); 
+
+            int cornerX = x-tetrim.second[1]-1;
+            int cornerY = y-tetrim.second[0]-1;
+            // only rows cornerY to cornerY+block_height-1 can be cleared
+            // start at row cornerY+m-1 and check if it can be cleared 
+            // if so shift everything above cornerY+m-1 down by 1 
+            // decerement block_height by 1 
+            int currRow = cornerY+m-1; 
+            int ceilRow = cornerY-1;
+            while(currRow>ceilRow){
+                // if currRow can be cleared shift everything above currRow 
+                // by one and increment ceilRow by 1  
+                // else decrement currRow by 1 
+                if(canClearRow(currRow)){
+                    shiftRowsAboveOne(currRow);
+                    ceilRow++;
+                }
+                else{
+                    currRow--;
+                }
+            }
+        }
 
 };
 int main(){
@@ -378,7 +418,6 @@ int main(){
     noecho();
     WINDOW *gameWin = newwin(17,12,10,10);
     refresh();
-    nodelay(gameWin,true);
     keypad(gameWin,TRUE);
     wborder(gameWin, 0, 0, 0, ' ', 0, 0, 0, 0);
     // render block at x,y+tetrim.second[0]
@@ -391,7 +430,7 @@ int main(){
     // or the floor 
     // game ends when new block spawn point is blocked by existing blocks on 
     // board;
-    
+    nodelay(gameWin,true);
     Tetris tetris;
     int i=0;
     queue<int> acts;
@@ -408,7 +447,7 @@ int main(){
     int y=1; 
     pair<vector<vector<char>>, vector<int>> tet = tetris.getRandomTetrim();
     // need to make game more responsive 
-    while(i<10){
+    while(i<20){
         //int key = wgetch(gameWin);
         // alt path to take multiple actions 
         int key; 
@@ -424,6 +463,7 @@ int main(){
         }*/
         if(tetris.collisionVert(tet,x,y+tet.second[0])){
             tetris.addTetrimToBoard(tet,x,y+tet.second[0]);
+            tetris.clearLines(tet,x,y+tet.second[0]);
             i++; 
             x=5;
             y=1;
