@@ -463,7 +463,7 @@ int main(){
             // perform only one action per frame  
             //int key = wgetch(gameWin);
             int step = 0;
-            while(!acts.empty()){
+            if(!acts.empty()){
                 int key = acts.front();
                 acts.pop();
             if(key==KEY_UP){
@@ -537,15 +537,6 @@ int main(){
     tetris.renderBoard(gameWin);
     wrefresh(gameWin);
     gameOver=true;
-    //testing keys 
-    /*int ch = getch();
-    cout<< keyname(ch)<<" "<<ch<<endl;*/
-    
-    //tetris.printTetrims();
-    
-    //tetris.rotateTetrimTest();
-    //tetris.renderBoard(gameWin);
-    //getch();
     getch();
     //t1.join();
     endwin();
