@@ -23,16 +23,16 @@ class Tetris{
     // if any row is filled with blocks, the row can be cleared 
     // if row is cleared, 
     private: 
-        vector<vector<char>> board{16,vector<char>(10,' ')};
+        //vector<vector<char>> board{16,vector<char>(10,' ')};
         // resize board to take into account the vanish zone 
-        //vector<vector<char>> board{32,vector<char>(10,' ')};
+        vector<vector<char>> board{32,vector<char>(10,' ')};
         vector<pair<vector<vector<char>>,vector<int>>> tetrim = {
             {
                 {
                     {'=','=','=','='}
                 },
                 /*{0,2}*/
-                {1,1}
+                {0,1}
             },
             {
                 {
@@ -164,12 +164,18 @@ class Tetris{
             int height; 
             int width; 
             getmaxyx(gameWin,width,height);
-            for(int i=0;i<board.size();i++){
+            /*for(int i=0;i<board.size();i++){
                 string r = string(begin(board[i]),end(board[i]));
                 mvwprintw(gameWin,i+1,1,r.c_str());
             }
+            wrefresh(gameWin);*/
+            // alt path to account for vanish zone 
+            for(int i=16;i<board.size();i++){
+                string r = string(begin(board[i]),end(board[i]));
+                mvwprintw(gameWin,(i-16)+1,1,r.c_str());
+
+            }
             wrefresh(gameWin);
-            //cout<< height<<"x"<<width<<endl;
         }
 
         // renders tetrimino with center at x, y onto Window gameWin based on the current board 
@@ -232,7 +238,11 @@ class Tetris{
             int n = tetrim.first[0].size(); 
 
             int cornerX = x-tetrim.second[1]-1;
-            int cornerY = y-tetrim.second[0]-1; 
+            //int cornerY = y-tetrim.second[0]-1;
+            
+            // alt path to account for vanish zone 
+            int cornerY = (y+16)-tetrim.second[0]-1; 
+            
             // iterate through each cell in the last row 
             // if cell is not blank, check if block below curr cell on board 
             // is filled or if the cell's position is equal to height 
@@ -264,7 +274,10 @@ class Tetris{
             int n = tetrim.first[0].size(); 
 
             int cornerX = x-tetrim.second[1]-1; 
-            int cornerY = y-tetrim.second[0]-1; 
+            //int cornerY = y-tetrim.second[0]-1; 
+
+            // alt path to account for vanish zone 
+            int cornerY = (y+16)-tetrim.second[0]-1;
 
             // iterate through each cell in the first col 
             // if cell is not blank, check if block to the left of curr 
@@ -295,8 +308,10 @@ class Tetris{
             int n = tetrim.first[0].size(); 
 
             int cornerX = x - tetrim.second[1] - 1;
-            int cornerY = y - tetrim.second[0] -1; 
+            //int cornerY = y - tetrim.second[0] -1; 
 
+            // alt path to account for vanish zone 
+            int cornerY = (y+16)-tetrim.second[0]-1; 
             for(int i=0;i<m;i++){
                 if(tetrim.first[i][n-1]!=' '){
                     // should be placed at board[cornerY+i][cornerX+n-1];
@@ -325,7 +340,10 @@ class Tetris{
             int n = tetrim.first[0].size(); 
 
             int cornerX = x-tetrim.second[1]-1;
-            int cornerY = y-tetrim.second[0]-1;
+            //int cornerY = y-tetrim.second[0]-1;
+
+            // alt path to account for vanish zone 
+            int cornerY = (y+16)-tetrim.second[0]-1; 
 
             //cout<<"["<<cornerY<<"]"<<"["<<cornerX<<"]"<<" ";
             // if board is empty just add tetrim[i][j] to board at board[cornerY+i][cornerX+j]
@@ -359,7 +377,11 @@ class Tetris{
             int n = tetrim.first[0].size(); 
 
             int cornerX = x-tetrim.second[1]-1;
-            int cornerY = y-tetrim.second[0]-1;
+            //int cornerY = y-tetrim.second[0]-1;
+
+            // alt path to account for vanish zone 
+            int cornerY = (y+16)-tetrim.second[0]-1; 
+            
             // only rows cornerY to cornerY+block_height-1 can be cleared
             // start at row cornerY+m-1 and check if it can be cleared 
             // if so shift everything above cornerY+m-1 down by 1 
@@ -384,7 +406,11 @@ class Tetris{
             int n = tetrim.first[0].size(); 
 
             int cornerX = 4-tetrim.second[1];
-            int cornerY = tetrim.second[0];
+            //int cornerY = tetrim.second[0];
+
+            // alt path to account for vanish zone 
+            int cornerY = 16/*-tetrim.second[0]*/;
+
 
             for(int i=0;i<m;i++){
                 for(int j=0; j<n;j++){
@@ -537,6 +563,7 @@ int main(){
     tetris.renderBoard(gameWin);
     wrefresh(gameWin);
     gameOver=true;
+    cout<<"Game Over"<<endl;
     getch();
     //t1.join();
     endwin();
