@@ -249,7 +249,7 @@ class Tetris{
             // of board if so return true; 
             // if cell is blank, go a cell up till we encounter a non empty 
             // cell and check if block below is filled if so return true; 
-            
+            if(cornerY+m-1 >= board.size()-1)return true; 
             for(int j=0;j<n;j++){
                 if(tetrim.first[m-1][j]!=' '){
                     //cout<< tetrim.first[m-1][j];
@@ -465,14 +465,28 @@ int main(){
         int key; 
         while((key=wgetch(gameWin))!=ERR)
             acts.push(key);
-        // alt path where we perform action first if possible 
-        /*if(key==KEY_UP){
-            // need to check if rotation collides horizontally as well 
-            pair<vector<vector<char>>, vector<int>> next = tet; 
-            tetris.rotateTetrim(next);
-            if(!tetris.collisionVert(next,x,y+next.second[0]))
-                tet = next; 
-        }*/
+        //performing act first 
+        if(!acts.empty()){
+            if(!acts.empty()){
+                int key = acts.front(); 
+                acts.pop(); 
+                if(key==KEY_UP){
+                    pair<vector<vector<char>>, vector<int>> next = tet; 
+                    tetris.rotateTetrim(next);
+                    if(!tetris.collision(tet,x,y+next.second[0])&&
+                            !tetris.collision(next,x,y+next.second[0]))
+                        tet = next; 
+                }
+                if(key == KEY_LEFT){
+                    if(!tetris.collisionLeft(tet,x,y+tet.second[0]))
+                        x--; 
+                }
+                if(key == KEY_RIGHT){
+                    if(!tetris.collisionRight(tet,x,y+tet.second[0]))
+                        x++;
+                }
+            }
+        }
         if(tetris.collisionVert(tet,x,y+tet.second[0])){
             tetris.addTetrimToBoard(tet,x,y+tet.second[0]);
             tetris.clearLines(tet,x,y+tet.second[0]);
@@ -485,10 +499,9 @@ int main(){
             gameOver = tetris.gameOver(tet);
         }
         // performing action just before rendering 
-        else{
+        /*else{
             // perform only one action per frame  
             //int key = wgetch(gameWin);
-            int step = 0;
             if(!acts.empty()){
                 int key = acts.front();
                 acts.pop();
@@ -508,7 +521,7 @@ int main(){
                     x++; 
             }
             }
-        }
+        }*/
         tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
         Sleep(900);
         tetris.clearTetrimFromCenter(gameWin,tet,x,y+tet.second[0]); 
