@@ -453,16 +453,16 @@ int main(){
             acts.push(key);
         }
     };
-    // std::thread t1(func);
+    //std::thread t1(func);
     int x=5; 
     int y=1; 
     pair<vector<vector<char>>, vector<int>> tet = tetris.getRandomTetrim();
-    gameOver = tetris.gameOver(tet);
-    // need to make game more responsive 
-    while(/*i<20*/!gameOver){
+    gameOver = tetris.gameOver(tet); 
+    while(!gameOver){
         //int key = wgetch(gameWin);
         // alt path to take multiple actions 
-        int key; 
+        int key;
+        bool moved = false;
         while((key=wgetch(gameWin))!=ERR)
             acts.push(key);
         //performing act first 
@@ -473,17 +473,23 @@ int main(){
                 if(key==KEY_UP){
                     pair<vector<vector<char>>, vector<int>> next = tet; 
                     tetris.rotateTetrim(next);
-                    if(!tetris.collision(tet,x,y+next.second[0])&&
+                    if(/*!tetris.collision(tet,x,y+next.second[0])&&*/
                             !tetris.collision(next,x,y+next.second[0]))
                         tet = next; 
                 }
                 if(key == KEY_LEFT){
-                    if(!tetris.collisionLeft(tet,x,y+tet.second[0]))
+                    if(!tetris.collisionLeft(tet,x,y+tet.second[0])){ 
                         x--; 
+                    }
                 }
                 if(key == KEY_RIGHT){
-                    if(!tetris.collisionRight(tet,x,y+tet.second[0]))
+                    if(!tetris.collisionRight(tet,x,y+tet.second[0])){
                         x++;
+                    }
+                }
+                if(key == KEY_DOWN){
+                    if(!tetris.collisionVert(tet,x,y+tet.second[0]))
+                        y++;
                 }
             }
         }
@@ -522,62 +528,17 @@ int main(){
             }
             }
         }*/
+        //cout<< x<<","<<y<<endl;
         tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
-        Sleep(900);
+        Sleep(600);
         tetris.clearTetrimFromCenter(gameWin,tet,x,y+tet.second[0]); 
         y++;
     }
-    /*while(i<5){
-        x=5;
-        y=1;
-        // have two cases 
-        // if tet collides vertically: 
-        //  * add tet to game state 
-        //  * clear lines and update game state as needed 
-        //  * get new tetrim, reset x and y to 5 and 1 respectively 
-        // else 
-        //  * get user input 
-        //  * perform action on tet if possible  
-        //  * increment y by 1 
-        // regardless of collision we need to render tetrim 
-        pair<vector<vector<char>>,vector<int>> tet = tetris.getRandomTetrim();
-        while(!tetris.collisionVert(tet,x,y+tet.second[0])){
-            // perform actions in acts queue
-            // get rid of 
-            tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
-            Sleep(900);
-            tetris.clearTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
-            y++;
-            while(!acts.empty()){
-                int ac = acts.front();
-                acts.pop();
-                if(ac==KEY_UP){
-                    tetris.rotateTetrim(tet);
-                    // alt impl where we check if rotation is possible 
-                    //pair<vector<vector<char>>,vector<int>> rot =tet; 
-                    // tetris.rotateTetrim(rot);
-                    // if(!tetris.collisionVert(rot,x,y+rot.second[0])){
-                    // tet =rot;
-                    // }
-                }
-            }
-
-        }
-        // take one more action if it is possible 
-
-        // Create an overlap function that checks if the tetrim at center 
-        // x, y+tet.second[0] overlaps with blocks on board 
-        // if so decrement y till block doesn't overlap with board 
-        // fix bug where just as block is about 
-        tetris.addTetrimToBoard(tet,x,y+tet.second[0]);
-        i++;
-        acts = queue<int>();
-    }*/
     tetris.renderBoard(gameWin);
     wrefresh(gameWin);
     gameOver=true;
     cout<<"Game Over"<<endl;
     getch();
-    //t1.join();
+    // t1.join();
     endwin();
 }
