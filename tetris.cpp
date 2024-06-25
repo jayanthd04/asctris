@@ -8,6 +8,7 @@
 #include <queue>
 #include <thread>
 #include <mutex>
+#include <chrono>
 using namespace std; 
 
 // game board is 10 cells wide by 16 cells height 
@@ -453,14 +454,22 @@ int main(){
             acts.push(key);
         }
     };
-    //std::thread t1(func);
+    // std::thread t1(func);
     int x=5; 
     int y=1; 
     pair<vector<vector<char>>, vector<int>> tet = tetris.getRandomTetrim();
     gameOver = tetris.gameOver(tet); 
+    auto lastGravTime = std::chrono::steady_clock::now();
+    auto lastFrameTime = std::chrono::steady_clock::now(); 
+    int gravityInt = 900; 
+    int frameInt = 50; 
     while(!gameOver){
         //int key = wgetch(gameWin);
         // alt path to take multiple actions 
+        auto currTime = std::chrono::steady_clock::now();
+        auto elapsedGravTime = std::chrono::duration_cast<std::chrono::milliseconds>(currTime-lastGravTime).count();
+        auto elapsedFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(currTime-lastFrameTime).count();
+
         int key;
         bool moved = false;
         while((key=wgetch(gameWin))!=ERR)
@@ -474,8 +483,9 @@ int main(){
                     pair<vector<vector<char>>, vector<int>> next = tet; 
                     tetris.rotateTetrim(next);
                     if(/*!tetris.collision(tet,x,y+next.second[0])&&*/
-                            !tetris.collision(next,x,y+next.second[0]))
+                            !tetris.collision(next,x,y+next.second[0])){
                         tet = next; 
+                    }
                 }
                 if(key == KEY_LEFT){
                     if(!tetris.collisionLeft(tet,x,y+tet.second[0])){ 
@@ -488,8 +498,9 @@ int main(){
                     }
                 }
                 if(key == KEY_DOWN){
-                    if(!tetris.collisionVert(tet,x,y+tet.second[0]))
+                    if(!tetris.collisionVert(tet,x,y+tet.second[0])){
                         y++;
+                    }
                 }
             }
         }
@@ -504,35 +515,19 @@ int main(){
             tet = tetris.getRandomTetrim(); 
             gameOver = tetris.gameOver(tet);
         }
-        // performing action just before rendering 
-        /*else{
-            // perform only one action per frame  
-            //int key = wgetch(gameWin);
-            if(!acts.empty()){
-                int key = acts.front();
-                acts.pop();
-            if(key==KEY_UP){
-                pair<vector<vector<char>>, vector<int>> next = tet; 
-                tetris.rotateTetrim(next);
-                if(!tetris.collision(next,x,y+next.second[0]))
-                    tet = next; 
-                //tetris.rotateTetrim(tet);
-            }
-            if(key==KEY_LEFT){
-                if(!tetris.collisionLeft(tet,x,y+tet.second[0]))
-                    x--;
-            }
-            if(key==KEY_RIGHT){
-                if(!tetris.collisionRight(tet,x,y+tet.second[0]))
-                    x++; 
-            }
-            }
-        }*/
         //cout<< x<<","<<y<<endl;
+        /*auto currTime = std::chrono::steady_clock::now(); 
+        auto elapsedGravTime = std::chrono::duration_cast<std::chrono::milliseconds>(currTime-lastGravTime).count(); 
+        auto elapsedFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(currTime-lastFrameTime).count();*/
         tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
-        Sleep(600);
-        tetris.clearTetrimFromCenter(gameWin,tet,x,y+tet.second[0]); 
-        y++;
+        Sleep(50);
+        tetris.clearTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
+        //lastFrameTime=currTime;
+        //y++;
+        if(elapsedGravTime >= gravityInt){
+            y++;
+            lastGravTime = currTime;
+        }
     }
     tetris.renderBoard(gameWin);
     wrefresh(gameWin);
