@@ -1,6 +1,7 @@
-#include <ncurses/ncurses.h>
-//#include <ncurses.h>
-#include<windows.h>
+//#include <ncurses/ncurses.h>
+#include <ncurses.h>
+//#include<windows.h>
+#include <unistd.h>
 #include<iostream>
 #include <vector>
 #include <cstdlib>
@@ -155,9 +156,11 @@ class Tetris{
                 ch = getch();
             }
         }
+        int lblock=0;
         pair<vector<vector<char>>, vector<int>> getRandomTetrim(){
             srand(static_cast<unsigned int>(time(0)));
-            int i = rand() % 7;
+            lblock +=2;
+            int i = lblock %7; //rand() % 7;
             return tetrim[i];
         }
         // renders game board onto Window gameWin
@@ -547,7 +550,7 @@ int main(){
                 lastGravTime+ std::chrono::milliseconds(gravityInt));
         auto sleepDur = std::chrono::duration_cast<std::chrono::milliseconds>(nextEventTime-std::chrono::steady_clock::now());
         if(sleepDur.count()>0)
-            Sleep(sleepDur.count());
+            usleep(sleepDur.count());
     }
     tetris.renderBoard(gameWin);
     wrefresh(gameWin);
