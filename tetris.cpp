@@ -171,12 +171,13 @@ class Tetris{
             }
             wrefresh(gameWin);*/
             // alt path to account for vanish zone 
+            //board[16]= vector<char>(10,'-');
             for(int i=16;i<board.size();i++){
                 string r = string(begin(board[i]),end(board[i]));
                 mvwprintw(gameWin,(i-16)+1,1,r.c_str());
 
             }
-            wrefresh(gameWin);
+            //wrefresh(gameWin);
         }
 
         // renders tetrimino with center at x, y onto Window gameWin based on the current board 
@@ -194,7 +195,7 @@ class Tetris{
                 //cout<< t<<" "<<cornerY+i<<","<<cornerX<<endl;
                 mvwprintw(gameWin,cornerY+i,cornerX,t.c_str());
             }
-            wrefresh(gameWin);
+            //wrefresh(gameWin);
 
         }
         //clear tetrimino with center at x, y on Window gameWin 
@@ -432,16 +433,8 @@ int main(){
     refresh();
     keypad(gameWin,TRUE);
     wborder(gameWin, 0, 0, 0, ' ', 0, 0, 0, 0);
-    // render block at x,y+tetrim.second[0]
-    //int y=1;
-    //int x=1;
-    // keep track of tetrim pos based on their center. 
-    // expand and render tetrim onto board around center   
-    // and check for collisions on the way down. 
-    // only have to append block to board if curr block has collided with another block 
-    // or the floor 
-    // game ends when new block spawn point is blocked by existing blocks on 
-    // board;
+
+
     nodelay(gameWin,true);
     Tetris tetris;
     int i=0;
@@ -456,16 +449,15 @@ int main(){
     };
     // std::thread t1(func);
     int x=5; 
-    int y=1; 
+    int y=1;
     pair<vector<vector<char>>, vector<int>> tet = tetris.getRandomTetrim();
     gameOver = tetris.gameOver(tet); 
     auto lastGravTime = std::chrono::steady_clock::now();
     auto lastFrameTime = std::chrono::steady_clock::now(); 
-    int gravityInt = 900; 
-    int frameInt = 50; 
+    int gravityInt = 600; 
+    int frameInt = 16; 
     while(!gameOver){
         //int key = wgetch(gameWin);
-        // alt path to take multiple actions 
         auto currTime = std::chrono::steady_clock::now();
         auto elapsedGravTime = std::chrono::duration_cast<std::chrono::milliseconds>(currTime-lastGravTime).count();
         auto elapsedFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(currTime-lastFrameTime).count();
@@ -482,52 +474,69 @@ int main(){
                 if(key==KEY_UP){
                     pair<vector<vector<char>>, vector<int>> next = tet; 
                     tetris.rotateTetrim(next);
-                    if(/*!tetris.collision(tet,x,y+next.second[0])&&*/
-                            !tetris.collision(next,x,y+next.second[0])){
+                    if(!tetris.collision(next,x,y+next.second[0])){
+                        moved = true; 
                         tet = next; 
                     }
                 }
                 if(key == KEY_LEFT){
                     if(!tetris.collisionLeft(tet,x,y+tet.second[0])){ 
+                        moved=true; 
                         x--; 
                     }
                 }
                 if(key == KEY_RIGHT){
                     if(!tetris.collisionRight(tet,x,y+tet.second[0])){
+                        moved=true; 
                         x++;
                     }
                 }
                 if(key == KEY_DOWN){
-                    if(!tetris.collisionVert(tet,x,y+tet.second[0])){
+                    if(!tetris.collisionVert(tet,x,y+tet.second[0]) && elapsedGravTime<gravityInt){
+                        moved=true; 
                         y++;
                     }
                 }
             }
         }
+        if(elapsedGravTime >=gravityInt){
         if(tetris.collisionVert(tet,x,y+tet.second[0])){
             tetris.addTetrimToBoard(tet,x,y+tet.second[0]);
-            tetris.clearLines(tet,x,y+tet.second[0]);
-            i++; 
+            tetris.clearLines(tet,x,y+tet.second[0]); 
             x=5;
             y=1;
+            //y=0;
             // update gameOver bool 
             acts = queue<int>();
             tet = tetris.getRandomTetrim(); 
             gameOver = tetris.gameOver(tet);
         }
-        //cout<< x<<","<<y<<endl;
-        /*auto currTime = std::chrono::steady_clock::now(); 
-        auto elapsedGravTime = std::chrono::duration_cast<std::chrono::milliseconds>(currTime-lastGravTime).count(); 
-        auto elapsedFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(currTime-lastFrameTime).count();*/
+        moved = true; 
+        }
+
+        if(elapsedFrameTime >= frameInt && (moved)){
+        //tetris.clearTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
+        //Sleep(1);
+        mvwprintw(gameWin,1,1,"----------");
+        wrefresh(gameWin);
         tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
-        Sleep(50);
-        tetris.clearTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
+        wrefresh(gameWin);
+        lastFrameTime = currTime; 
+        }
         //lastFrameTime=currTime;
         //y++;
         if(elapsedGravTime >= gravityInt){
             y++;
             lastGravTime = currTime;
         }
+        auto nextEventTime = min(lastFrameTime+ std::chrono::milliseconds(frameInt),
+                lastGravTime+ std::chrono::milliseconds(gravityInt));
+        auto sleepDur = std::chrono::duration_cast<std::chrono::milliseconds>(nextEventTime-std::chrono::steady_clock::now());
+        if(sleepDur.count()>0)
+            Sleep(sleepDur.count());
+        //Sleep(1);
+        // figure out when next event should occur and sleep for that amount of time 
+        //
     }
     tetris.renderBoard(gameWin);
     wrefresh(gameWin);
