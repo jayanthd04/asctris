@@ -517,7 +517,7 @@ int main(){
         if(elapsedFrameTime >= frameInt && (moved)){
         //tetris.clearTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
         //Sleep(1);
-        mvwprintw(gameWin,1,1,"----------");
+        //mvwprintw(gameWin,1,1,"----------");
         wrefresh(gameWin);
         tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
         wrefresh(gameWin);
