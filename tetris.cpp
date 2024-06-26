@@ -182,7 +182,7 @@ class Tetris{
 
         // renders tetrimino with center at x, y onto Window gameWin based on the current board 
         void renderTetrimFromCenter(WINDOW*& gameWin, pair <vector<vector<char>>,vector<int>>& tetrim, int x, int y){
-            renderBoard(gameWin);
+            //renderBoard(gameWin);
             int m = tetrim.first.size();  
             int n = tetrim.first[0].size();
 
@@ -192,8 +192,16 @@ class Tetris{
             int cornerY = y-tetrim.second[0];
             for(int i=0;i<m;i++){
                 string t = string(begin(tetrim.first[i]), end(tetrim.first[i]));
+                //const char* str = t.c_str();
+                // considering board state when rendering 
+                for(int j =0;j<n;j++){
+                    if(board[cornerY+i+16-1][cornerX+j-1]==' '){
+                        mvwaddch(gameWin,cornerY+i,cornerX+j,t[j]);
+                        //mvwprintw(gameWin,cornerY+i,cornerX+j,t[j]);
+                    }
+                }
                 //cout<< t<<" "<<cornerY+i<<","<<cornerX<<endl;
-                mvwprintw(gameWin,cornerY+i,cornerX,t.c_str());
+                //mvwprintw(gameWin,cornerY+i,cornerX,t.c_str());
             }
             //wrefresh(gameWin);
 
@@ -510,6 +518,9 @@ int main(){
             acts = queue<int>();
             tet = tetris.getRandomTetrim(); 
             gameOver = tetris.gameOver(tet);
+            // render Efficently 
+            tetris.renderBoard(gameWin);
+            wrefresh(gameWin);
         }
         moved = true; 
         }
@@ -517,8 +528,11 @@ int main(){
         if(elapsedFrameTime >= frameInt && (moved)){
         //tetris.clearTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
         //Sleep(1);
-        //mvwprintw(gameWin,1,1,"----------");
-        wrefresh(gameWin);
+        
+        /*tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
+        wrefresh(gameWin);*/
+        // render efficiently 
+        tetris.clearTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
         tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
         wrefresh(gameWin);
         lastFrameTime = currTime; 
@@ -534,9 +548,6 @@ int main(){
         auto sleepDur = std::chrono::duration_cast<std::chrono::milliseconds>(nextEventTime-std::chrono::steady_clock::now());
         if(sleepDur.count()>0)
             Sleep(sleepDur.count());
-        //Sleep(1);
-        // figure out when next event should occur and sleep for that amount of time 
-        //
     }
     tetris.renderBoard(gameWin);
     wrefresh(gameWin);
