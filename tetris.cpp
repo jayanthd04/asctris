@@ -452,6 +452,7 @@ int main(){
     nodelay(gameWin,true);
     Tetris tetris;
     int i=0;
+    mutex mtx; 
     queue<int> acts;
     bool gameOver = false;
     bool input = false; 
@@ -484,7 +485,7 @@ int main(){
         while((key=wgetch(gameWin))!=ERR)
             acts.push(key);
         //performing act first 
-        if(!acts.empty()){
+        //if(!acts.empty()){
             if(!acts.empty()){
                 int key = acts.front(); 
                 acts.pop(); 
@@ -515,7 +516,7 @@ int main(){
                     }
                 }
             }
-        }
+        //}
         if(elapsedGravTime >=gravityInt){
         if(tetris.collisionVert(tet,x,y+tet.second[0])){
             tetris.addTetrimToBoard(tet,x,y+tet.second[0]);
