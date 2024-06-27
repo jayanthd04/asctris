@@ -485,38 +485,36 @@ int main(){
         while((key=wgetch(gameWin))!=ERR)
             acts.push(key);
         //performing act first 
-        //if(!acts.empty()){
-            if(!acts.empty()){
-                int key = acts.front(); 
-                acts.pop(); 
-                if(key==KEY_UP){
-                    pair<vector<vector<char>>, vector<int>> next = tet; 
-                    tetris.rotateTetrim(next);
-                    if(!tetris.collision(next,x,y+next.second[0])){
-                        moved = true; 
-                        tet = next; 
-                    }
-                }
-                if(key == KEY_LEFT){
-                    if(!tetris.collisionLeft(tet,x,y+tet.second[0])){ 
-                        moved=true; 
-                        x--; 
-                    }
-                }
-                if(key == KEY_RIGHT){
-                    if(!tetris.collisionRight(tet,x,y+tet.second[0])){
-                        moved=true; 
-                        x++;
-                    }
-                }
-                if(key == KEY_DOWN){
-                    if(!tetris.collisionVert(tet,x,y+tet.second[0]) && elapsedGravTime<gravityInt){
-                        moved=true; 
-                        y++;
-                    }
+        if(!acts.empty()){
+            int key = acts.front(); 
+            acts.pop(); 
+            if(key==KEY_UP){
+                pair<vector<vector<char>>, vector<int>> next = tet; 
+                tetris.rotateTetrim(next);
+                if(!tetris.collision(next,x,y+next.second[0])){
+                    moved = true; 
+                    tet = next; 
                 }
             }
-        //}
+            if(key == KEY_LEFT){
+                if(!tetris.collisionLeft(tet,x,y+tet.second[0])){ 
+                    moved=true; 
+                    x--; 
+                }
+            }
+            if(key == KEY_RIGHT){
+                if(!tetris.collisionRight(tet,x,y+tet.second[0])){
+                    moved=true; 
+                    x++;
+                }
+            }
+            if(key == KEY_DOWN){
+                if(!tetris.collisionVert(tet,x,y+tet.second[0]) && elapsedGravTime<gravityInt){
+                    moved=true; 
+                    y++;
+                }
+            }
+        }
         if(elapsedGravTime >=gravityInt){
         if(tetris.collisionVert(tet,x,y+tet.second[0])){
             tetris.addTetrimToBoard(tet,x,y+tet.second[0]);
