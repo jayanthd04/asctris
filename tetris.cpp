@@ -218,7 +218,13 @@ class Tetris{
             vector<vector<char>> erase(m,vector<char>(n,' '));
             for(int i=0;i<m;i++){
                 string t = string(begin(erase[i]), end(erase[i]));
-                mvwprintw(gameWin,cornerY+i,cornerX,t.c_str());
+                // considering board state when rendering 
+                for(int j =0;j<n;j++){
+                    if(board[cornerY+i+16-1][cornerX+j-1]==' '){
+                        mvwaddch(gameWin,cornerY+i,cornerX+j,t[j]);
+                    }
+                }
+                //mvwprintw(gameWin,cornerY+i,cornerX,t.c_str());
             }
             //wrefresh(gameWin);
         }
