@@ -208,7 +208,7 @@ class Tetris{
         }
         //clear tetrimino with center at x, y on Window gameWin 
         void clearTetrimFromCenter(WINDOW*& gameWin, pair< vector<vector<char>>, vector<int>>& tetrim, int x, int y){
-            renderBoard(gameWin);
+            //renderBoard(gameWin);
             int m = tetrim.first.size(); 
 
             int n = tetrim.first[0].size();
@@ -220,7 +220,7 @@ class Tetris{
                 string t = string(begin(erase[i]), end(erase[i]));
                 mvwprintw(gameWin,cornerY+i,cornerX,t.c_str());
             }
-            wrefresh(gameWin);
+            //wrefresh(gameWin);
         }
         // checks if tetrim collides with any blocks on the board vertically. 
         void renderTetrimTest(WINDOW*& gameWin){
@@ -458,6 +458,9 @@ int main(){
     // std::thread t1(func);
     int x=5; 
     int y=1;
+    int prevX = -1; 
+    int prevY = -1; 
+    pair<vector<vector<char>>, vector<int>> prevTet; 
     pair<vector<vector<char>>, vector<int>> tet = tetris.getRandomTetrim();
     gameOver = tetris.gameOver(tet); 
     auto lastGravTime = std::chrono::steady_clock::now();
@@ -513,14 +516,17 @@ int main(){
             tetris.clearLines(tet,x,y+tet.second[0]); 
             x=5;
             y=1;
-            //y=0;
+            
+            //rendering efficiently 
+            prevX = -1; 
+            prevY=-1;
             // update gameOver bool 
             acts = queue<int>();
             tet = tetris.getRandomTetrim(); 
             gameOver = tetris.gameOver(tet);
             // render Efficently 
             tetris.renderBoard(gameWin);
-            wrefresh(gameWin);
+            //wrefresh(gameWin);
         }
         moved = true; 
         }
@@ -532,10 +538,17 @@ int main(){
         /*tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
         wrefresh(gameWin);*/
         // render efficiently 
-        tetris.clearTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
+        
+        //tetris.clearTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
+        // render efficiently 
+        if(prevX!=-1 && prevY!=-1)
+            tetris.clearTetrimFromCenter(gameWin,prevTet,prevX,prevY+prevTet.second[0]);
         tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
         wrefresh(gameWin);
         lastFrameTime = currTime; 
+        prevX=x; 
+        prevY = y;
+        prevTet = tet; 
         }
         //lastFrameTime=currTime;
         //y++;
@@ -549,7 +562,7 @@ int main(){
         if(sleepDur.count()>0)
             Sleep(sleepDur.count());
     }
-    tetris.renderBoard(gameWin);
+    //tetris.renderBoard(gameWin);
     wrefresh(gameWin);
     gameOver=true;
     cout<<"Game Over"<<endl;
