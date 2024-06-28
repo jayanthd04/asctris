@@ -9,7 +9,7 @@
 #include <csignal>
 #include <queue>
 #include <thread>
-#include <signal.h>
+#include <condition_variable>
 #include <mutex>
 #include <chrono>
 using namespace std; 
@@ -452,15 +452,13 @@ int main(){
     wborder(gameWin, 0, 0, 0, ' ', 0, 0, 0, 0);
 
 
-    nodelay(gameWin,true);
+    //nodelay(gameWin,true);
     Tetris tetris;
     mutex mtx; 
-    queue<int> acts;
-    //deque<int> acts;
-    sigset_t renderSig; 
-    sigemptyset(&renderSig);
-    sigaddset(&renderSig,SIGINT);
-    pthread_sigmask(SIG_BLOCK,&renderSig,nullptr);
+    //queue<int> acts;
+    deque<int> acts;
+    condition_variable render; 
+    bool processAct = false; 
     int x = 5; 
     int y = 1; 
     int prevX = -1;
@@ -470,15 +468,19 @@ int main(){
     int gravityInt=600; 
     int frameInt = 16; 
     bool gameOver = false;
-    bool input = false;
+    //bool input = false;
     auto sig_handle = [&](){
-        if(!gameOver){
-            mtx.lock(); 
+        while(!gameOver){
+            std::unique_lock<mutex> lk(mtx);
+            render.wait(lk,[&]{return processAct;});
+            //if(!gameOver){
+            bool grav = false;
             if(!acts.empty()){
                 int key = acts.front(); 
-                acts.pop(); 
+                //cout<<key<<endl;
+                //acts.pop(); 
                 // using deque; 
-                // acts.pop_front();
+                acts.pop_front();
                 if(key==KEY_UP){
                     pair<vector<vector<char>>, vector<int>> next = tet; 
                     tetris.rotateTetrim(next); 
@@ -509,61 +511,80 @@ int main(){
                         y=1;
                         prevX=-1; 
                         prevY=-1;
-                        acts = queue<int>(); 
+                        //acts = queue<int>(); 
                         // using deque 
-                        // acts = deque<int>(); 
+                        acts = deque<int>(); 
                         tet = tetris.getRandomTetrim(); 
                         gameOver = tetris.gameOver(tet);
                         tetris.renderBoard(gameWin);
                     }
+                    else
+                        grav=true;
                 }
             }
-            mtx.unlock();
             if(prevX!=-1 && prevY!=-1)
                 tetris.clearTetrimFromCenter(gameWin, prevTet,prevX,prevY+prevTet.second[0]);
             tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
             wrefresh(gameWin);
             prevX = x; 
             prevY = y; 
-            prevTet = tet; 
-            Sleep(10);
+            prevTet = tet;  
+            processAct = false;
+            if(grav)
+                y++;
+            lk.unlock();
+            //Sleep(10);
         }
-    };
-    //signal(SIGINT,signal_handler);
-    auto func = [&gameWin,&mtx,&acts,&gameOver](){
+    }; 
+    auto func = [&processAct,&render,&gameWin,&mtx,&acts,&gameOver](){
         while(!gameOver){
             int key = wgetch(gameWin);
-            mtx.lock(); 
-            acts.push(key);
+            //mtx.lock(); 
+            //acts.push(key);
             // using deque
             //acts.push_back(key);
-            mtx.unlock(); 
+            //mtx.unlock();
+            {
+                lock_guard<mutex> lk(mtx);
+                acts.push_back(key);
+                processAct = true; 
+            }
+            render.notify_one();
             // send signal for main thread to handle action 
         }
     };
-    // std::thread t1(func);
+    //std::thread input(func);
     /*int x=5; 
     int y=1;
     int prevX = -1; 
     int prevY = -1; 
     pair<vector<vector<char>>, vector<int>> prevTet; 
     pair<vector<vector<char>>, vector<int>> tet = tetris.getRandomTetrim();*/
-    gameOver = tetris.gameOver(tet); 
+    //gameOver = tetris.gameOver(tet); 
     auto lastGravTime = std::chrono::steady_clock::now();
     auto lastFrameTime = std::chrono::steady_clock::now(); 
     //int gravityInt = 600; 
     //int frameInt = 16; 
     // create a thread that adds a special gravity action to the front of the queue 
-    auto gravFunc = [&gravityInt,&mtx,&acts,&gameOver](){
+    auto gravFunc = [&processAct,&render,&gravityInt,&mtx,&acts,&gameOver](){
         while(!gameOver){
-            mtx.lock(); 
-            // acts.push_front(200);
-            mtx.unlock();
+            //mtx.lock(); 
+            //acts.push_front(200);
+            //mtx.unlock();
             // send signal for main thread to handle gravity action
+            {
+                lock_guard<mutex> lk(mtx);
+                acts.push_front(200);
+                processAct = true; 
+            }
+            render.notify_one();
             Sleep(gravityInt);
         }
     };
-    while(!gameOver){
+    std::thread input(func);
+    std::thread gravity(gravFunc);
+    sig_handle();
+    /*while(!gameOver){
         //int key = wgetch(gameWin);
         auto currTime = std::chrono::steady_clock::now();
         auto elapsedGravTime = std::chrono::duration_cast<std::chrono::milliseconds>(currTime-lastGravTime).count();
@@ -628,9 +649,7 @@ int main(){
         if(elapsedFrameTime >= frameInt && (moved)){
         //tetris.clearTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
         //Sleep(1);
-        
-        /*tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
-        wrefresh(gameWin);*/
+    
         // render efficiently 
         
         //tetris.clearTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
@@ -655,12 +674,13 @@ int main(){
         auto sleepDur = std::chrono::duration_cast<std::chrono::milliseconds>(nextEventTime-std::chrono::steady_clock::now());
         if(sleepDur.count()>0)
             Sleep(sleepDur.count());
-    }
+    }*/
     //tetris.renderBoard(gameWin);
-    wrefresh(gameWin);
+    //wrefresh(gameWin);
     gameOver=true;
     cout<<"Game Over"<<endl;
     getch();
-    // t1.join();
+    input.join(); 
+    gravity.join();
     endwin();
 }
