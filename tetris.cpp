@@ -475,12 +475,13 @@ int main(){
             render.wait(lk,[&]{return processAct;});
             //if(!gameOver){
             bool grav = false;
-            if(!acts.empty()){
-                int key = acts.front(); 
-                //cout<<key<<endl;
-                //acts.pop(); 
+            //int key; 
+            //if(!acts.empty()){
+                int key = acts.front();  
                 // using deque; 
                 acts.pop_front();
+                processAct=false;
+                lk.unlock();
                 if(key==KEY_UP){
                     pair<vector<vector<char>>, vector<int>> next = tet; 
                     tetris.rotateTetrim(next); 
@@ -488,22 +489,22 @@ int main(){
                         tet = next; 
                     }
                 }
-                if(key == KEY_LEFT){
+                else if(key == KEY_LEFT){
                     if(!tetris.collisionLeft(tet,x,y+tet.second[0])){
                         x--; 
                     }
                 }
-                if(key == KEY_RIGHT){
+                else if(key == KEY_RIGHT){
                     if(!tetris.collisionRight(tet,x,y+tet.second[0])){
                         x++; 
                     }
                 }
-                if(key == KEY_DOWN){
+                else if(key == KEY_DOWN){
                     if(!tetris.collisionVert(tet,x,y+tet.second[0])){
                         y++; 
                     }
                 }
-                if(key == 200){
+                else if(key == 200){
                     if(tetris.collisionVert(tet,x,y+tet.second[0])){
                         tetris.addTetrimToBoard(tet,x,y+tet.second[0]);
                         tetris.clearLines(tet,x,y+tet.second[0]);
@@ -521,18 +522,20 @@ int main(){
                     else
                         grav=true;
                 }
-            }
+            //} 
             if(prevX!=-1 && prevY!=-1)
                 tetris.clearTetrimFromCenter(gameWin, prevTet,prevX,prevY+prevTet.second[0]);
             tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
             wrefresh(gameWin);
             prevX = x; 
             prevY = y; 
-            prevTet = tet;  
-            processAct = false;
+            prevTet = tet;
+            //processAct = false;
             if(grav)
                 y++;
-            lk.unlock();
+            /*lk.lock();
+            processAct = false; 
+            lk.unlock();*/
             //Sleep(10);
         }
     }; 
