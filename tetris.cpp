@@ -3,6 +3,7 @@
 #include<windows.h>
 #include<iostream>
 #include <vector>
+#include <atomic>
 #include <deque>
 #include <cstdlib>
 #include <ctime>
@@ -456,9 +457,13 @@ int main(){
     Tetris tetris;
     mutex mtx; 
     //queue<int> acts;
-    deque<int> acts;
+    // attach time when action was added to queue and only perform actions that are 
+    // within threshold 
+    // deque<int> acts;
+    // attaching time stamp to actions 
+    deque<pair<int,std::chrono::steady_clock::time_point>> acts;
     condition_variable render; 
-    bool processAct = false; 
+    std::atomic<bool> processAct(false); 
     int x = 5; 
     int y = 1; 
     int prevX = -1;
@@ -468,20 +473,27 @@ int main(){
     int gravityInt=600; 
     int frameInt = 16; 
     bool gameOver = false;
+    
     //bool input = false;
     auto sig_handle = [&](){
         while(!gameOver){
             std::unique_lock<mutex> lk(mtx);
-            render.wait(lk,[&]{return processAct;});
+            render.wait(lk,[&]{return processAct.load();});
             //if(!gameOver){
-            bool grav = false;
-            //int key; 
+            bool grav = false; 
             //if(!acts.empty()){
-                int key = acts.front();  
+                // int key = acts.front();
+                // adding time stamp to actions
+                int key = acts.front().first; 
+                std::chrono::steady_clock::time_point actTime = acts.front().second;
                 // using deque; 
                 acts.pop_front();
                 processAct=false;
                 lk.unlock();
+                // adding time stamp to actions 
+                auto currTime = std::chrono::steady_clock::now(); 
+                auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currTime-actTime).count(); 
+                if(elapsedTime>16) continue; 
                 if(key==KEY_UP){
                     pair<vector<vector<char>>, vector<int>> next = tet; 
                     tetris.rotateTetrim(next); 
@@ -514,7 +526,9 @@ int main(){
                         prevY=-1;
                         //acts = queue<int>(); 
                         // using deque 
-                        acts = deque<int>(); 
+                        // acts = deque<int>(); 
+                        // adding time stamp to actions 
+                        acts = deque<pair<int,std::chrono::steady_clock::time_point>>();
                         tet = tetris.getRandomTetrim(); 
                         gameOver = tetris.gameOver(tet);
                         tetris.renderBoard(gameWin);
@@ -527,6 +541,7 @@ int main(){
                 tetris.clearTetrimFromCenter(gameWin, prevTet,prevX,prevY+prevTet.second[0]);
             tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
             wrefresh(gameWin);
+            // updating prevX and prevY if it is within threshold;
             prevX = x; 
             prevY = y; 
             prevTet = tet;
@@ -549,7 +564,10 @@ int main(){
             //mtx.unlock();
             {
                 lock_guard<mutex> lk(mtx);
-                acts.push_back(key);
+                // acts.push_back(key);
+                // adding time stamp to actions 
+                std::chrono::steady_clock::time_point currTime = std::chrono::steady_clock::now(); 
+                acts.push_back({key,currTime});
                 processAct = true; 
             }
             render.notify_one();
@@ -566,6 +584,7 @@ int main(){
     //gameOver = tetris.gameOver(tet); 
     auto lastGravTime = std::chrono::steady_clock::now();
     auto lastFrameTime = std::chrono::steady_clock::now(); 
+    //cout<< typeid(lastGravTime).name()<<endl;
     //int gravityInt = 600; 
     //int frameInt = 16; 
     // create a thread that adds a special gravity action to the front of the queue 
@@ -577,7 +596,10 @@ int main(){
             // send signal for main thread to handle gravity action
             {
                 lock_guard<mutex> lk(mtx);
-                acts.push_front(200);
+                // acts.push_front(200);
+                // adding time stamp to actions 
+                std::chrono::steady_clock::time_point currTime = std::chrono::steady_clock::now(); 
+                acts.push_front({200,currTime});
                 processAct = true; 
             }
             render.notify_one();
@@ -685,5 +707,6 @@ int main(){
     getch();
     input.join(); 
     gravity.join();
+    delwin(gameWin);
     endwin();
 }
