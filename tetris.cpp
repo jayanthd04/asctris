@@ -473,9 +473,10 @@ int main(){
     int gravityInt=600; 
     int frameInt = 16; 
     bool gameOver = false;
-    
+    //auto lastProc = std::chrono::steady_clock::now(); 
     //bool input = false;
     auto sig_handle = [&](){
+        auto lastProc = std::chrono::steady_clock::now(); 
         while(!gameOver){
             std::unique_lock<mutex> lk(mtx);
             render.wait(lk,[&]{return processAct.load();});
@@ -488,12 +489,18 @@ int main(){
                 std::chrono::steady_clock::time_point actTime = acts.front().second;
                 // using deque; 
                 acts.pop_front();
-                processAct=false;
+
+                processAct= false;
                 lk.unlock();
                 // adding time stamp to actions 
                 auto currTime = std::chrono::steady_clock::now(); 
                 auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currTime-actTime).count(); 
-                if(elapsedTime>16) continue; 
+                auto timeSince = std::chrono::duration_cast<std::chrono::milliseconds>(lastProc-actTime).count(); 
+                if(elapsedTime>0){
+                    cout<<elapsedTime<<" "<<timeSince<<" "<<key<<endl; 
+                }
+                //if(timeSince>16) continue; 
+                //lastProc = currTime; 
                 if(key==KEY_UP){
                     pair<vector<vector<char>>, vector<int>> next = tet; 
                     tetris.rotateTetrim(next); 
@@ -537,6 +544,7 @@ int main(){
                         grav=true;
                 }
             //} 
+            if(elapsedTime<=16){
             if(prevX!=-1 && prevY!=-1)
                 tetris.clearTetrimFromCenter(gameWin, prevTet,prevX,prevY+prevTet.second[0]);
             tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
@@ -545,9 +553,11 @@ int main(){
             prevX = x; 
             prevY = y; 
             prevTet = tet;
+            }
             //processAct = false;
             if(grav)
                 y++;
+            lastProc = std::chrono::steady_clock::now();
             /*lk.lock();
             processAct = false; 
             lk.unlock();*/
@@ -568,7 +578,7 @@ int main(){
                 // adding time stamp to actions 
                 std::chrono::steady_clock::time_point currTime = std::chrono::steady_clock::now(); 
                 acts.push_back({key,currTime});
-                processAct = true; 
+                processAct = processAct^true; 
             }
             render.notify_one();
             // send signal for main thread to handle action 
@@ -600,12 +610,15 @@ int main(){
                 // adding time stamp to actions 
                 std::chrono::steady_clock::time_point currTime = std::chrono::steady_clock::now(); 
                 acts.push_front({200,currTime});
-                processAct = true; 
+                processAct = processAct ^ true; 
             }
             render.notify_one();
-            Sleep(gravityInt);
+            //Sleep(gravityInt);
+            //cout<<"Grav Thread: "<<this_thread::get_id()<<endl;
+            this_thread::sleep_for(chrono::milliseconds(gravityInt));
         }
     };
+    //cout<<"Main Thread: "<<this_thread::get_id()<<endl;
     std::thread input(func);
     std::thread gravity(gravFunc);
     sig_handle();
