@@ -475,30 +475,36 @@ int main(){
     bool gameOver = false;
     //auto lastProc = std::chrono::steady_clock::now(); 
     //bool input = false;
-    auto sig_handle = [&](){
+    auto sig_handle = [/*&*/&acts,&render,&processAct,&x,&y,&prevX,&prevY,
+    &prevTet,&tet,&gravityInt,&gameOver,&tetris,&mtx,&gameWin](){
         auto lastProc = std::chrono::steady_clock::now(); 
         while(!gameOver){
-            std::unique_lock<mutex> lk(mtx);
-            render.wait(lk,[&]{return processAct.load();});
-            //if(!gameOver){
             bool grav = false; 
+            int key; 
+            std::chrono::steady_clock::time_point actTime; 
+            {
+            std::unique_lock<mutex> lk(mtx);
+            render.wait(lk,[&processAct]{return processAct.load();});
+            //if(!gameOver){
+            //bool grav = false; 
             //if(!acts.empty()){
                 // int key = acts.front();
                 // adding time stamp to actions
-                int key = acts.front().first; 
-                std::chrono::steady_clock::time_point actTime = acts.front().second;
+                key = acts.front().first; 
+                actTime = acts.front().second;
                 // using deque; 
                 acts.pop_front();
 
                 processAct= false;
-                lk.unlock();
+            }
+                //lk.unlock();
                 // adding time stamp to actions 
                 auto currTime = std::chrono::steady_clock::now(); 
                 auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currTime-actTime).count(); 
-                auto timeSince = std::chrono::duration_cast<std::chrono::milliseconds>(lastProc-actTime).count(); 
-                if(elapsedTime>0){
+                //auto timeSince = std::chrono::duration_cast<std::chrono::milliseconds>(lastProc-actTime).count(); 
+                /*if(elapsedTime>0){
                     cout<<elapsedTime<<" "<<timeSince<<" "<<key<<endl; 
-                }
+                }*/
                 //if(timeSince>16) continue; 
                 //lastProc = currTime; 
                 if(key==KEY_UP){
@@ -544,19 +550,27 @@ int main(){
                         grav=true;
                 }
             //} 
+            //cout<<"Rendering"<<endl;
+            mtx.lock();
             if(elapsedTime<=16){
-            if(prevX!=-1 && prevY!=-1)
+            if(prevX!=-1 && prevY!=-1){
                 tetris.clearTetrimFromCenter(gameWin, prevTet,prevX,prevY+prevTet.second[0]);
+                //cout<< "Clearing: "<<prevX<<" "<<prevY+prevTet.second[0]<<endl;
+            }
             tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
+            //cout<< "Rendering: "<<x<<" "<<y+tet.second[0]<<endl;
             wrefresh(gameWin);
-            // updating prevX and prevY if it is within threshold;
             prevX = x; 
             prevY = y; 
             prevTet = tet;
             }
+            //mtx.unlock();
+            //cout<<"Done Rendering"<<endl;
+            //cout<<endl;
             //processAct = false;
             if(grav)
                 y++;
+            mtx.unlock();
             lastProc = std::chrono::steady_clock::now();
             /*lk.lock();
             processAct = false; 
@@ -578,9 +592,10 @@ int main(){
                 // adding time stamp to actions 
                 std::chrono::steady_clock::time_point currTime = std::chrono::steady_clock::now(); 
                 acts.push_back({key,currTime});
-                processAct = processAct^true; 
+                processAct = processAct^true;
+                //cout<<"Added user input"<<endl;
             }
-            render.notify_one();
+            render.notify_all();
             // send signal for main thread to handle action 
         }
     };
@@ -610,9 +625,10 @@ int main(){
                 // adding time stamp to actions 
                 std::chrono::steady_clock::time_point currTime = std::chrono::steady_clock::now(); 
                 acts.push_front({200,currTime});
-                processAct = processAct ^ true; 
+                processAct = processAct ^ true;
+                //cout<<"Added grav event"<<endl;
             }
-            render.notify_one();
+            render.notify_all();
             //Sleep(gravityInt);
             //cout<<"Grav Thread: "<<this_thread::get_id()<<endl;
             this_thread::sleep_for(chrono::milliseconds(gravityInt));
