@@ -195,12 +195,14 @@ class Tetris{
             int cornerX = x-tetrim.second[1];
             int cornerY = y-tetrim.second[0];
             for(int i=0;i<m;i++){
-                string t = string(begin(tetrim.first[i]), end(tetrim.first[i]));
+                //string t = string(begin(tetrim.first[i]), end(tetrim.first[i]));
                 //const char* str = t.c_str();
                 // considering board state when rendering 
                 for(int j =0;j<n;j++){
                     if(board[cornerY+i+16-1][cornerX+j-1]==' '){
-                        mvwaddch(gameWin,cornerY+i,cornerX+j,t[j]);
+                        //mvwaddch(gameWin,cornerY+i,cornerX+j,t[j]);
+                        // not using redundant string 
+                        mvwaddch(gameWin,cornerY+i,cornerX+j,tetrim.first[i][j]);
                         //mvwprintw(gameWin,cornerY+i,cornerX+j,t[j]);
                     }
                 }
@@ -219,13 +221,15 @@ class Tetris{
 
             int cornerX = x-tetrim.second[1];
             int cornerY = y-tetrim.second[0];
-            vector<vector<char>> erase(m,vector<char>(n,' '));
+            //vector<vector<char>> erase(m,vector<char>(n,' '));
             for(int i=0;i<m;i++){
-                string t = string(begin(erase[i]), end(erase[i]));
+                //string t = string(begin(erase[i]), end(erase[i]));
                 // considering board state when rendering 
                 for(int j =0;j<n;j++){
                     if(board[cornerY+i+16-1][cornerX+j-1]==' '){
-                        mvwaddch(gameWin,cornerY+i,cornerX+j,t[j]);
+                        //mvwaddch(gameWin,cornerY+i,cornerX+j,t[j]);
+                        // not using redundant vector 
+                        mvwaddch(gameWin,cornerY+i,cornerX+j,' ');
                     }
                 }
                 //mvwprintw(gameWin,cornerY+i,cornerX,t.c_str());
@@ -274,7 +278,7 @@ class Tetris{
                 if(tetrim.first[m-1][j]!=' '){
                     //cout<< tetrim.first[m-1][j];
                     // should be placed at board[cornerY+n-1][cornerX+i]
-                    if(cornerY+m-1 == board.size()-1|| board[cornerY+m][cornerX+j]!=' '){
+                    if(/*cornerY+m-1 == board.size()-1|| */board[cornerY+m][cornerX+j]!=' '){
                         return true;
                     }
                 }
@@ -306,11 +310,11 @@ class Tetris{
             // if cell is blank, go a cell to the right till we reach 
             // a non-empty cell and check if the block to the left 
             // is filled if so return true; 
-
+            if(cornerX == 0 )return true; 
             for(int i=0;i<m;i++){
                 if(tetrim.first[i][0]!=' '){
                     // should be placed at board[cornerY+i][cornerX]
-                    if(cornerX == 0 || board[cornerY+i][cornerX-1]!=' ')
+                    if(/*cornerX == 0 ||*/ board[cornerY+i][cornerX-1]!=' ')
                         return true; 
                 }
                 else{
@@ -331,11 +335,12 @@ class Tetris{
             //int cornerY = y - tetrim.second[0] -1; 
 
             // alt path to account for vanish zone 
-            int cornerY = (y+16)-tetrim.second[0]-1; 
+            int cornerY = (y+16)-tetrim.second[0]-1;
+            if(cornerX+n-1 == board[0].size()-1)return true; 
             for(int i=0;i<m;i++){
                 if(tetrim.first[i][n-1]!=' '){
                     // should be placed at board[cornerY+i][cornerX+n-1];
-                    if(cornerX+n-1 == board[0].size()-1 || board[cornerY+i][cornerX+n]!=' ')
+                    if(/*cornerX+n-1 == board[0].size()-1 ||*/ board[cornerY+i][cornerX+n]!=' ')
                         return true; 
                 }
                 else{
@@ -475,11 +480,13 @@ int main(){
     bool gameOver = false;
     //auto lastProc = std::chrono::steady_clock::now(); 
     //bool input = false;
+    std::thread::id main_id = this_thread::get_id(); 
     auto sig_handle = [/*&*/&acts,&render,&processAct,&x,&y,&prevX,&prevY,
     &prevTet,&tet,&gravityInt,&gameOver,&tetris,&mtx,&gameWin](){
         auto lastProc = std::chrono::steady_clock::now(); 
         while(!gameOver){
             bool grav = false; 
+            bool moved = false; 
             int key; 
             std::chrono::steady_clock::time_point actTime; 
             {
@@ -499,8 +506,8 @@ int main(){
             }
                 //lk.unlock();
                 // adding time stamp to actions 
-                auto currTime = std::chrono::steady_clock::now(); 
-                auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currTime-actTime).count(); 
+                //auto currTime = std::chrono::steady_clock::now(); 
+                //auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currTime-actTime).count(); 
                 //auto timeSince = std::chrono::duration_cast<std::chrono::milliseconds>(lastProc-actTime).count(); 
                 /*if(elapsedTime>0){
                     cout<<elapsedTime<<" "<<timeSince<<" "<<key<<endl; 
@@ -511,25 +518,30 @@ int main(){
                     pair<vector<vector<char>>, vector<int>> next = tet; 
                     tetris.rotateTetrim(next); 
                     if(!tetris.collision(next,x,y+next.second[0])){
-                        tet = next; 
+                        tet = next;
+                        moved = true; 
                     }
                 }
                 else if(key == KEY_LEFT){
                     if(!tetris.collisionLeft(tet,x,y+tet.second[0])){
                         x--; 
+                        moved = true; 
                     }
                 }
                 else if(key == KEY_RIGHT){
                     if(!tetris.collisionRight(tet,x,y+tet.second[0])){
-                        x++; 
+                        x++;
+                        moved = true; 
                     }
                 }
                 else if(key == KEY_DOWN){
                     if(!tetris.collisionVert(tet,x,y+tet.second[0])){
-                        y++; 
+                        y++;
+                        moved = true; 
                     }
                 }
                 else if(key == 200){
+                    moved = true; 
                     if(tetris.collisionVert(tet,x,y+tet.second[0])){
                         tetris.addTetrimToBoard(tet,x,y+tet.second[0]);
                         tetris.clearLines(tet,x,y+tet.second[0]);
@@ -551,8 +563,12 @@ int main(){
                 }
             //} 
             //cout<<"Rendering"<<endl;
-            mtx.lock();
-            if(elapsedTime<=16){
+            //mtx.lock();
+            if(moved){
+                /*if(prevX==x&&prevY==y)
+                    cout<<prevX<<" "<<prevY<<endl;*/
+            lock_guard<mutex> lk(mtx);
+            //mtx.lock();
             if(prevX!=-1 && prevY!=-1){
                 tetris.clearTetrimFromCenter(gameWin, prevTet,prevX,prevY+prevTet.second[0]);
                 //cout<< "Clearing: "<<prevX<<" "<<prevY+prevTet.second[0]<<endl;
@@ -563,6 +579,7 @@ int main(){
             prevX = x; 
             prevY = y; 
             prevTet = tet;
+            //mtx.unlock();
             }
             //mtx.unlock();
             //cout<<"Done Rendering"<<endl;
@@ -570,12 +587,9 @@ int main(){
             //processAct = false;
             if(grav)
                 y++;
-            mtx.unlock();
-            lastProc = std::chrono::steady_clock::now();
-            /*lk.lock();
-            processAct = false; 
-            lk.unlock();*/
-            //Sleep(10);
+            //mtx.unlock();
+            
+            // lastProc = std::chrono::steady_clock::now();
         }
     }; 
     auto func = [&processAct,&render,&gameWin,&mtx,&acts,&gameOver](){
@@ -592,7 +606,7 @@ int main(){
                 // adding time stamp to actions 
                 std::chrono::steady_clock::time_point currTime = std::chrono::steady_clock::now(); 
                 acts.push_back({key,currTime});
-                processAct = processAct^true;
+                processAct = /*processAct^*/true;
                 //cout<<"Added user input"<<endl;
             }
             render.notify_all();
@@ -625,7 +639,7 @@ int main(){
                 // adding time stamp to actions 
                 std::chrono::steady_clock::time_point currTime = std::chrono::steady_clock::now(); 
                 acts.push_front({200,currTime});
-                processAct = processAct ^ true;
+                processAct = /*processAct ^ */true;
                 //cout<<"Added grav event"<<endl;
             }
             render.notify_all();
@@ -633,7 +647,7 @@ int main(){
             //cout<<"Grav Thread: "<<this_thread::get_id()<<endl;
             this_thread::sleep_for(chrono::milliseconds(gravityInt));
         }
-    };
+    }; 
     //cout<<"Main Thread: "<<this_thread::get_id()<<endl;
     std::thread input(func);
     std::thread gravity(gravFunc);
