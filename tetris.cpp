@@ -470,6 +470,7 @@ int main(){
     deque<pair<int,std::chrono::steady_clock::time_point>> acts;
     condition_variable render; 
     std::atomic<bool> processAct(false); 
+    atomic<bool> isRendering(false);
     int x = 5; 
     int y = 1; 
     int prevX = -1;
@@ -483,7 +484,7 @@ int main(){
     //bool input = false;
     std::thread::id main_id = this_thread::get_id(); 
     auto sig_handle = [/*&*/&acts,&render,&processAct,&x,&y,&prevX,&prevY,
-    &prevTet,&tet,&gravityInt,&gameOver,&tetris,&mtx,&gameWin](){
+    &prevTet,&tet,&gravityInt,&gameOver,&tetris,&mtx,&gameWin,&windowMtx,&isRendering](){
         auto lastProc = std::chrono::steady_clock::now(); 
         while(!gameOver){
             bool grav = false; 
@@ -568,8 +569,10 @@ int main(){
             if(moved){
                 /*if(prevX==x&&prevY==y)
                     cout<<prevX<<" "<<prevY<<endl;*/
-            lock_guard<mutex> lk(mtx);
+            lock_guard<mutex> lk(windowMtx);
+            isRendering = true; 
             //mtx.lock();
+            //cout<<"Started rendering"<<endl; 
             if(prevX!=-1 && prevY!=-1){
                 tetris.clearTetrimFromCenter(gameWin, prevTet,prevX,prevY+prevTet.second[0]);
                 //cout<< "Clearing: "<<prevX<<" "<<prevY+prevTet.second[0]<<endl;
@@ -581,6 +584,9 @@ int main(){
             prevY = y; 
             prevTet = tet;
             //mtx.unlock();
+            //cout<<"Done rendering"<<endl;
+            //cout<<endl;
+            isRendering = false; 
             }
             //mtx.unlock();
             //cout<<"Done Rendering"<<endl;
@@ -593,24 +599,21 @@ int main(){
             // lastProc = std::chrono::steady_clock::now();
         }
     }; 
-    auto func = [&processAct,&render,&gameWin,&mtx,&acts,&gameOver,&windowMtx](){
+    auto func = [&processAct,&render,&gameWin,&mtx,&acts,&gameOver,&windowMtx,&isRendering](){
         while(!gameOver){
-            int key = wgetch(gameWin);
-            //mtx.lock(); 
-            //acts.push(key);
-            // using deque
-            //acts.push_back(key);
-            //mtx.unlock();
-            {
-                lock_guard<mutex> lk(mtx);
+            if(!isRendering.load()){
+                int key = wgetch(gameWin);
+                {
+                    lock_guard<mutex> lk(mtx);
                 // acts.push_back(key);
                 // adding time stamp to actions 
-                std::chrono::steady_clock::time_point currTime = std::chrono::steady_clock::now(); 
-                acts.push_back({key,currTime});
-                processAct = /*processAct^*/true;
+                    std::chrono::steady_clock::time_point currTime = std::chrono::steady_clock::now(); 
+                    acts.push_back({key,currTime});
+                    processAct = /*processAct^*/true;
                 //cout<<"Added user input"<<endl;
+                }
+                render.notify_all();
             }
-            render.notify_all();
             // send signal for main thread to handle action 
         }
     };
