@@ -461,6 +461,7 @@ int main(){
     //nodelay(gameWin,true);
     Tetris tetris;
     mutex mtx; 
+    mutex windowMtx; 
     //queue<int> acts;
     // attach time when action was added to queue and only perform actions that are 
     // within threshold 
@@ -592,7 +593,7 @@ int main(){
             // lastProc = std::chrono::steady_clock::now();
         }
     }; 
-    auto func = [&processAct,&render,&gameWin,&mtx,&acts,&gameOver](){
+    auto func = [&processAct,&render,&gameWin,&mtx,&acts,&gameOver,&windowMtx](){
         while(!gameOver){
             int key = wgetch(gameWin);
             //mtx.lock(); 
