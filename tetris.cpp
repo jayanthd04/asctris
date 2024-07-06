@@ -465,10 +465,11 @@ int main(){
     //queue<int> acts;
     // attach time when action was added to queue and only perform actions that are 
     // within threshold 
-    // deque<int> acts;
+    deque<int> acts;
     // attaching time stamp to actions 
-    deque<pair<int,std::chrono::steady_clock::time_point>> acts;
+    // deque<pair<int,std::chrono::steady_clock::time_point>> acts;
     condition_variable render; 
+    condition_variable inp; 
     std::atomic<bool> processAct(false); 
     atomic<bool> isRendering(false);
     int x = 5; 
@@ -497,10 +498,10 @@ int main(){
             //if(!gameOver){
             //bool grav = false; 
             //if(!acts.empty()){
-                // int key = acts.front();
+                key = acts.front();
                 // adding time stamp to actions
-                key = acts.front().first; 
-                actTime = acts.front().second;
+                // key = acts.front().first; 
+                // actTime = acts.front().second;
                 // using deque; 
                 acts.pop_front();
 
@@ -553,9 +554,9 @@ int main(){
                         prevY=-1;
                         //acts = queue<int>(); 
                         // using deque 
-                        // acts = deque<int>(); 
+                        acts = deque<int>(); 
                         // adding time stamp to actions 
-                        acts = deque<pair<int,std::chrono::steady_clock::time_point>>();
+                        // acts = deque<pair<int,std::chrono::steady_clock::time_point>>();
                         tet = tetris.getRandomTetrim(); 
                         gameOver = tetris.gameOver(tet);
                         tetris.renderBoard(gameWin);
@@ -569,24 +570,24 @@ int main(){
             if(moved){
                 /*if(prevX==x&&prevY==y)
                     cout<<prevX<<" "<<prevY<<endl;*/
-            lock_guard<mutex> lk(windowMtx);
-            isRendering = true; 
+                {
+                lock_guard<mutex> lk(windowMtx);
+                isRendering = true; 
             //mtx.lock();
             //cout<<"Started rendering"<<endl; 
-            if(prevX!=-1 && prevY!=-1){
-                tetris.clearTetrimFromCenter(gameWin, prevTet,prevX,prevY+prevTet.second[0]);
+        
+                if(prevX!=-1 && prevY!=-1){
+                    tetris.clearTetrimFromCenter(gameWin, prevTet,prevX,prevY+prevTet.second[0]);
                 //cout<< "Clearing: "<<prevX<<" "<<prevY+prevTet.second[0]<<endl;
-            }
-            tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
+                }
+                tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
             //cout<< "Rendering: "<<x<<" "<<y+tet.second[0]<<endl;
-            wrefresh(gameWin);
-            prevX = x; 
-            prevY = y; 
-            prevTet = tet;
-            //mtx.unlock();
-            //cout<<"Done rendering"<<endl;
-            //cout<<endl;
-            isRendering = false; 
+                wrefresh(gameWin);
+                isRendering = false;
+                }
+                prevX = x; 
+                prevY = y; 
+                prevTet = tet;
             }
             //mtx.unlock();
             //cout<<"Done Rendering"<<endl;
@@ -598,23 +599,28 @@ int main(){
             
             // lastProc = std::chrono::steady_clock::now();
         }
-    }; 
-    auto func = [&processAct,&render,&gameWin,&mtx,&acts,&gameOver,&windowMtx,&isRendering](){
+    };
+    WINDOW *inpPad=newpad(1,1);
+    keypad(inpPad,TRUE);
+    auto func = [&processAct,&render,&gameWin,&mtx,&acts,&gameOver,&windowMtx,&isRendering,&inpPad](){
         while(!gameOver){
-            if(!isRendering.load()){
-                int key = wgetch(gameWin);
+            /*if(!isRendering.load()){
+                {
+                    lock_guard<mutex> windLk(windowMtx);
+                    //wrefresh(gameWin);
+                }*/
+                int key = wgetch(inpPad);
                 {
                     lock_guard<mutex> lk(mtx);
-                // acts.push_back(key);
-                // adding time stamp to actions 
-                    std::chrono::steady_clock::time_point currTime = std::chrono::steady_clock::now(); 
-                    acts.push_back({key,currTime});
-                    processAct = /*processAct^*/true;
+                    acts.push_back(key);
+                    // adding time stamp to actions 
+                    // std::chrono::steady_clock::time_point currTime = std::chrono::steady_clock::now(); 
+                    // acts.push_back({key,currTime});
+                    processAct = true;
                 //cout<<"Added user input"<<endl;
                 }
                 render.notify_all();
-            }
-            // send signal for main thread to handle action 
+            //}
         }
     };
     //std::thread input(func);
@@ -639,10 +645,10 @@ int main(){
             // send signal for main thread to handle gravity action
             {
                 lock_guard<mutex> lk(mtx);
-                // acts.push_front(200);
+                acts.push_front(200);
                 // adding time stamp to actions 
-                std::chrono::steady_clock::time_point currTime = std::chrono::steady_clock::now(); 
-                acts.push_front({200,currTime});
+                // std::chrono::steady_clock::time_point currTime = std::chrono::steady_clock::now(); 
+                // acts.push_front({200,currTime});
                 processAct = /*processAct ^ */true;
                 //cout<<"Added grav event"<<endl;
             }
