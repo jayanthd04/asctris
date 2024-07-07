@@ -491,7 +491,7 @@ int main(){
             bool grav = false; 
             bool moved = false; 
             int key; 
-            std::chrono::steady_clock::time_point actTime; 
+            // std::chrono::steady_clock::time_point actTime; 
             {
             std::unique_lock<mutex> lk(mtx);
             render.wait(lk,[&processAct]{return processAct.load();});
@@ -570,9 +570,9 @@ int main(){
             if(moved){
                 /*if(prevX==x&&prevY==y)
                     cout<<prevX<<" "<<prevY<<endl;*/
-                {
-                lock_guard<mutex> lk(windowMtx);
-                isRendering = true; 
+                // {
+                // lock_guard<mutex> lk(windowMtx);
+                // isRendering = true; 
             //mtx.lock();
             //cout<<"Started rendering"<<endl; 
         
@@ -583,8 +583,8 @@ int main(){
                 tetris.renderTetrimFromCenter(gameWin,tet,x,y+tet.second[0]);
             //cout<< "Rendering: "<<x<<" "<<y+tet.second[0]<<endl;
                 wrefresh(gameWin);
-                isRendering = false;
-                }
+                // isRendering = false;
+                // }
                 prevX = x; 
                 prevY = y; 
                 prevTet = tet;
