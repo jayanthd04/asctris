@@ -452,7 +452,9 @@ int main(){
     cbreak();
     curs_set(0);
     noecho();
-    WINDOW *gameWin = newwin(17,12,10,10);
+    //WINDOW *gameWin = newwin(17,12,10,10);
+    // window for neovim plugin 
+    WINDOW *gameWin = newwin(17,12,0,0);
     refresh();
     keypad(gameWin,TRUE);
     wborder(gameWin, 0, 0, 0, ' ', 0, 0, 0, 0);
