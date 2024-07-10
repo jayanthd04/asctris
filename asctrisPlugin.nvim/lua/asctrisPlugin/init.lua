@@ -22,7 +22,7 @@ print(get_plugin_dir())
 -- local plugin_dir = require("asctrisPlugin").plugin_dir()
 -- print(plugin_dir)
 local plugin_path = require("asctrisPlugin.path").plugin_dir()
-local exec_path = plugin_path .. "/tetrisMult.exe"
+local exec_path = plugin_path .. "/tetrisNvim"
 M.run_game = function ()
     -- vim.cmd('term ' .. exec_path)
     -- vim.cmd('startinsert')
@@ -47,21 +47,22 @@ M.run_game = function ()
         height = height,
         row = row, 
         col = col,
+        -- updatetime=16,
+        -- scrollback = 1000,
     }
     local win = vim.api.nvim_open_win(buf, true, opts)
-
     local function on_exit(job_id,exit_code,event)
         vim.schedule(function()
             vim.cmd('stopinsert')
             vim.api.nvim_win_close(win,true)
         end)
     end 
-
     vim.fn.termopen(exec_path,{
         on_exit = on_exit 
     })
 
     vim.cmd('startinsert')
+
     -- print(plugin_path)
 end 
 M.setup = function ()

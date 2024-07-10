@@ -12,5 +12,15 @@ M.plugin_dir = function ()
     local plugin_dir = vim.fn.fnamemodify(plugin_path,":h:h:h:h")
     return plugin_dir
 end 
+M.exec_file_exists = function ()
+    local plugin_path = M.plugin_dir()
+    local exec_file = vim.fn.glob(plugin_path .. "/tetrisNvim.*",false,true)
+    -- searching when files are added properly to nvim rtp 
+    -- local exec_file = vim.api.nvim_get_runtime_file(plugin_path .. "/tetrisNvim.*",false)
+    if #exec_file < 1 then 
+        return false;
+    end 
+    return true; 
+end 
 
 return M
