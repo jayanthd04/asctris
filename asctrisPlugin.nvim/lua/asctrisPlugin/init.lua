@@ -40,6 +40,9 @@ M.run_game = function ()
     local col = (vim.o.columns/2) -8
 
     local buf = vim.api.nvim_create_buf(false,true)
+    vim.api.nvim_buf_set_option(buf,'scrollback',10000) 
+    vim.opt_local.updatetime = 16
+    --vim.api.nvim_buf_set_option(buf,'updatetime',16)
     local opts = {
         style = 'minimal',
         relative = 'editor',
@@ -51,6 +54,8 @@ M.run_game = function ()
         -- scrollback = 1000,
     }
     local win = vim.api.nvim_open_win(buf, true, opts)
+    -- vim.api.nvim_win_set_option(win, 'updatetime', 16)
+    -- vim.api.nvim_win_set_option(win, 'scrollback', 10000)
     local function on_exit(job_id,exit_code,event)
         vim.schedule(function()
             vim.cmd('stopinsert')
