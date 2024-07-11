@@ -58,7 +58,7 @@ M.run_game = function ()
     -- vim.api.nvim_win_set_option(win, 'scrollback', 10000)
     local function on_exit(job_id,exit_code,event)
         vim.schedule(function()
-            vim.cmd('stopinsert')
+            -- vim.cmd('stopinsert')
             vim.api.nvim_win_close(win,true)
         end)
     end 
