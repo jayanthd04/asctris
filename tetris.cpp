@@ -1,6 +1,12 @@
-#include <ncurses/ncurses.h>
+#if __has_include(<ncurses/ncurses.h>)
+    #include <ncurses/ncurses.h>
+#elif __has_include(ncurses.h)
+    #include <ncurses.h>
+#else 
+    #error "ncurses.h was not found please verify that ncurses has been properly installed"
+#endif
 //#include <ncurses.h>
-#include<windows.h>
+//#include<windows.h>
 #include<iostream>
 #include <vector>
 #include <atomic>
