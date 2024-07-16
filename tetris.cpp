@@ -467,7 +467,7 @@ int main(){
 
 
     //nodelay(gameWin,true);
-    srand(static_cast<unsigned int>(time(0)));
+    srand(chrono::high_resolution_clock::now().time_since_epoch().count());
     Tetris tetris;
     mutex mtx; 
     mutex windowMtx; 
