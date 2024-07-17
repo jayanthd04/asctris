@@ -88,8 +88,10 @@ class Tetris{
                 {1,1}
             },
         };
-
-    public: 
+    public:
+        Tetris(){
+            srand(chrono::steady_clock::now().time_since_epoch().count());
+        }
         vector<vector<char>> getState(){
             return board;
         }
@@ -167,7 +169,7 @@ class Tetris{
         }
         pair<vector<vector<char>>, vector<int>> getRandomTetrim(){
             // srand(static_cast<unsigned int>(time(0)));
-            srand(chrono::steady_clock::now().time_since_epoch().count());
+            // srand(chrono::steady_clock::now().time_since_epoch().count());
             int i = rand() % 7;
             return tetrim[i];
         }
